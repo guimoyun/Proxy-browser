@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:columnCount="5"
+    android:rowCount="2">
+
+    <LinearLayout android:id="@+id/cell0" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon0" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell1" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon1" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell2" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon2" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell3" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon3" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell4" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon4" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel4" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell5" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon5" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel5" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell6" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon6" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel6" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell7" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon7" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel7" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell8" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon8" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel8" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/cell9" android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_columnWeight="1" android:orientation="vertical" android:gravity="center" android:padding="10dp">
+        <ImageView android:id="@+id/cellIcon9" android:layout_width="26dp" android:layout_height="26dp" />
+        <TextView android:id="@+id/cellLabel9" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="11sp" android:textColor="@color/text_primary" android:paddingTop="4dp" />
+    </LinearLayout>
+</GridLayout>

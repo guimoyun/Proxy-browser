@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">影子浏览器</string>
+
+    <!-- 底部导航 -->
+    <string name="tab_browser">浏览器</string>
+    <string name="tab_nodes">节点</string>
+    <string name="tab_settings">设置</string>
+
+    <!-- 代理状态 -->
+    <string name="proxy_disconnected">未连接</string>
+    <string name="proxy_connecting">连接中…</string>
+    <string name="proxy_connected">已连接</string>
+    <string name="proxy_error">连接失败</string>
+    <string name="proxy_off">关闭</string>
+
+    <!-- 浏览器 -->
+    <string name="address_hint">输入网址或搜索</string>
+    <string name="new_tab">新标签页</string>
+    <string name="close_tab">关闭</string>
+    <string name="reload">刷新</string>
+    <string name="back">后退</string>
+    <string name="forward">前进</string>
+    <string name="home">主页</string>
+    <string name="menu">菜单</string>
+    <string name="find_in_page">页内查找</string>
+
+    <!-- 菜单面板（类 Via，3 页） -->
+    <string name="m_night">夜间模式</string>
+    <string name="m_bookmark">书签</string>
+    <string name="m_history">历史</string>
+    <string name="m_download">下载</string>
+    <string name="m_incognito">隐身</string>
+    <string name="m_share">分享</string>
+    <string name="m_add_bookmark">添加书签</string>
+    <string name="m_desktop">电脑模式</string>
+    <string name="m_toolbox">工具箱</string>
+    <string name="m_settings">设置</string>
+    <string name="m_find">页内查找</string>
+    <string name="m_save">保存</string>
+    <string name="m_offline">离线页面</string>
+    <string name="m_translate">翻译</string>
+    <string name="m_source">源码</string>
+    <string name="m_fullscreen">全屏</string>
+    <string name="m_image_mode">有图模式</string>
+    <string name="m_sniff">资源嗅探</string>
+    <string name="m_identity">浏览器标识</string>
+    <string name="m_netlog">网络日志</string>
+    <string name="m_proxy">代理节点</string>
+    <string name="m_adblock">广告拦截</string>
+    <string name="m_fontsize">字体大小</string>
+    <string name="m_orientation">屏幕方向</string>
+    <string name="m_tts">朗读网页</string>
+    <string name="m_customize">定制菜单</string>
+    <string name="m_fill_link">按链接填充</string>
+    <string name="m_qr">扫描二维码</string>
+    <string name="m_home_shortcut">添加到桌面</string>
+    <string name="m_ai">AI</string>
+    <string name="m_mark_ad">标记广告</string>
+    <string name="m_report">举报网站</string>
+
+    <!-- 节点 -->
+    <string name="node_title">代理节点</string>
+    <string name="add_node">添加节点</string>
+    <string name="import_subscription">导入订阅</string>
+    <string name="test_latency">测延迟</string>
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
+    <string name="no_node">暂无节点，请添加或导入订阅</string>
+    <string name="edit_node">编辑节点</string>
+    <string name="delete_node">删除节点</string>
+    <string name="node_remark">备注名</string>
+    <string name="node_protocol">协议</string>
+    <string name="node_address">服务器地址</string>
+    <string name="node_port">端口</string>
+    <string name="node_uuid">UUID</string>
+    <string name="node_password">密码</string>
+    <string name="node_sni">SNI / ServerName</string>
+    <string name="node_path">路径 Path</string>
+    <string name="node_host">Host(WS)</string>
+    <string name="node_network">传输方式</string>
+    <string name="node_tls">TLS 类型</string>
+    <string name="node_security">加密方式</string>
+    <string name="node_method">Method(SS)</string>
+    <string name="node_service">ServiceName(gRPC)</string>
+    <string name="node_flow">Flow(可选)</string>
+    <string name="node_public_key">Reality PublicKey(可选)</string>
+    <string name="node_short_id">Reality ShortId(可选)</string>
+    <string name="delete">删除</string>
+    <string name="next">下一项</string>
+    <string name="quit">退出</string>
+    <string name="tab_list">标签页</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">设置</string>
+    <string name="fingerprint_group">指纹伪装（WebView 可改项）</string>
+    <string name="custom_ua">自定义 User-Agent</string>
+    <string name="random_ua">随机 UA</string>
+    <string name="fake_timezone">伪装时区偏移</string>
+    <string name="disable_webrtc">禁用 WebRTC</string>
+    <string name="clear_data">清除浏览数据</string>
+    <string name="cleared">已清除</string>
+    <string name="proxy_group">代理</string>
+    <string name="local_http_port">本地 HTTP 端口</string>
+    <string name="about_group">关于</string>
+    <string name="about_text">影子浏览器：内嵌 Xray 的轻量代理浏览器，无需系统 VPN。</string>
+
+    <!-- 订阅 -->
+    <string name="subscription_url">订阅地址</string>
+    <string name="subscription_import">导入</string>
+    <string name="subscription_fetching">正在拉取订阅…</string>
+    <string name="subscription_ok">订阅导入成功，新增 %1$d 个节点</string>
+    <string name="subscription_fail">订阅拉取失败</string>
+    <string name="paste_link_hint">粘贴 vless:// trojan:// vmess:// ss:// 分享链接或订阅地址</string>
+</resources>

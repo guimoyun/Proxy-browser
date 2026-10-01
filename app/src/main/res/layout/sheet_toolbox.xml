@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/surface"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tool_find"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_outline"
+            android:padding="10dp"
+            android:text="@string/m_find"
+            android:textColor="@color/accent" />
+
+        <TextView
+            android:id="@+id/tool_fullscreen"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_btn_outline"
+            android:padding="10dp"
+            android:text="@string/m_fullscreen"
+            android:textColor="@color/accent" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tool_font_dec"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_outline"
+            android:padding="10dp"
+            android:text="A-"
+            android:textColor="@color/accent" />
+
+        <TextView
+            android:id="@+id/tool_font_inc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_btn_outline"
+            android:padding="10dp"
+            android:text="A+"
+            android:textColor="@color/accent" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tool_share"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:background="@drawable/bg_btn_outline"
+        android:padding="10dp"
+        android:text="@string/m_share"
+        android:textColor="@color/accent" />
+</LinearLayout>
