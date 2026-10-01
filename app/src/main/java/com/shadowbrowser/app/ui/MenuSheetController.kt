@@ -107,14 +107,32 @@ object MenuSheetController {
     ) : RecyclerView.Adapter<MenuPagerAdapter.VH>() {
 
         class VH(v: View) : RecyclerView.ViewHolder(v) {
-            val cells: Array<View> = Array(10) { i ->
-                v.findViewById(v.resources.getIdentifier("cell$i", "id", v.context.packageName))
-            }
-            private fun resId(name: String, i: Int): Int =
-                itemView.resources.getIdentifier(name, "id", itemView.context.packageName)
+            // 直接引用 R.id（编译期检查），不用 getIdentifier 反射查找（部分 ROM 返回 0 会导致闪退）
+            private val cellViews = arrayOf(
+                v.findViewById<View>(R.id.cell0), v.findViewById<View>(R.id.cell1),
+                v.findViewById<View>(R.id.cell2), v.findViewById<View>(R.id.cell3),
+                v.findViewById<View>(R.id.cell4), v.findViewById<View>(R.id.cell5),
+                v.findViewById<View>(R.id.cell6), v.findViewById<View>(R.id.cell7),
+                v.findViewById<View>(R.id.cell8), v.findViewById<View>(R.id.cell9)
+            )
+            private val iconViews = arrayOf(
+                v.findViewById<ImageView>(R.id.cellIcon0), v.findViewById<ImageView>(R.id.cellIcon1),
+                v.findViewById<ImageView>(R.id.cellIcon2), v.findViewById<ImageView>(R.id.cellIcon3),
+                v.findViewById<ImageView>(R.id.cellIcon4), v.findViewById<ImageView>(R.id.cellIcon5),
+                v.findViewById<ImageView>(R.id.cellIcon6), v.findViewById<ImageView>(R.id.cellIcon7),
+                v.findViewById<ImageView>(R.id.cellIcon8), v.findViewById<ImageView>(R.id.cellIcon9)
+            )
+            private val labelViews = arrayOf(
+                v.findViewById<TextView>(R.id.cellLabel0), v.findViewById<TextView>(R.id.cellLabel1),
+                v.findViewById<TextView>(R.id.cellLabel2), v.findViewById<TextView>(R.id.cellLabel3),
+                v.findViewById<TextView>(R.id.cellLabel4), v.findViewById<TextView>(R.id.cellLabel5),
+                v.findViewById<TextView>(R.id.cellLabel6), v.findViewById<TextView>(R.id.cellLabel7),
+                v.findViewById<TextView>(R.id.cellLabel8), v.findViewById<TextView>(R.id.cellLabel9)
+            )
 
-            fun icon(i: Int): ImageView = itemView.findViewById(resId("cellIcon", i))
-            fun label(i: Int): TextView = itemView.findViewById(resId("cellLabel", i))
+            fun cell(i: Int): View = cellViews[i]
+            fun icon(i: Int): ImageView = iconViews[i]
+            fun label(i: Int): TextView = labelViews[i]
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -127,7 +145,7 @@ object MenuSheetController {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val items = pages[position]
             items.forEachIndexed { i, item ->
-                val cell = holder.cells[i]
+                val cell = holder.cell(i)
                 holder.icon(i).setImageResource(item.icon)
                 holder.label(i).setText(item.label)
                 cell.alpha = if (item.enabled) 1f else 0.35f
