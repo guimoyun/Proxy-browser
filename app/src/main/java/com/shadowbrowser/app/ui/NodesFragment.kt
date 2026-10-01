@@ -16,9 +16,11 @@ import com.shadowbrowser.app.nodes.Node
 import com.shadowbrowser.app.nodes.SubscriptionManager
 import com.shadowbrowser.app.proxy.ProxyManager
 import com.shadowbrowser.app.ui.adapter.NodeListAdapter
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -29,7 +31,10 @@ class NodesFragment : Fragment() {
 
     private var _b: FragmentNodesBinding? = null
     private val b get() = _b!!
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val exceptionHandler = CoroutineExceptionHandler { _, e ->
+        android.util.Log.e("NodesFragment", "scope error", e)
+    }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main + exceptionHandler)
     private val latency = HashMap<String, Long>()
 
     private lateinit var proxy: ProxyManager
@@ -48,7 +53,7 @@ class NodesFragment : Fragment() {
         b.toolbarTitle.text = getString(R.string.node_title)
         b.btnAdd.setOnClickListener {
             requireActivity().supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, NodeEditFragment.newInstance())
+                .add(R.id.fragmentContainer, NodeEditFragment.newInstance())
                 .addToBackStack(null)
                 .commit()
         }
@@ -59,6 +64,7 @@ class NodesFragment : Fragment() {
     }
 
     private fun refresh() {
+        val b = _b ?: return
         val nodes = proxy.nodeStore.nodes()
         b.emptyView.visibility = if (nodes.isEmpty()) View.VISIBLE else View.GONE
         b.list.visibility = if (nodes.isEmpty()) View.GONE else View.VISIBLE
@@ -97,7 +103,7 @@ class NodesFragment : Fragment() {
                     1 -> test(node)
                     2 -> {
                         requireActivity().supportFragmentManager.beginTransaction()
-                            .replace(R.id.fragmentContainer, NodeEditFragment.newInstance(node.id))
+                            .add(R.id.fragmentContainer, NodeEditFragment.newInstance(node.id))
                             .addToBackStack(null)
                             .commit()
                     }
@@ -156,6 +162,7 @@ class NodesFragment : Fragment() {
             val result = withContext(Dispatchers.IO) {
                 try { SubscriptionManager().fetch(url) } catch (e: Exception) { null }
             }
+            val b = _b ?: return@launch
             b.btnImport.isEnabled = true
             if (result == null || result.isEmpty()) {
                 Toast.makeText(requireContext(), getString(R.string.subscription_fail), Toast.LENGTH_SHORT).show()
@@ -171,6 +178,7 @@ class NodesFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        scope.cancel()
         _b = null
     }
 }

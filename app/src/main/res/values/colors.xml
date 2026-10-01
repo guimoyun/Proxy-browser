@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#1B5E20</color>
-    <color name="primary_dark">#0D3C10</color>
-    <color name="accent">#66BB6A</color>
-    <color name="bg">#FAFAFA</color>
+    <color name="primary">#2E7D32</color>
+    <color name="primary_dark">#1B5E20</color>
+    <color name="accent">#43A047</color>
+    <color name="bg">#F7F8F7</color>
     <color name="surface">#FFFFFF</color>
     <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
+    <color name="text_secondary">#8A8A8A</color>
+    <color name="icon_tint">#4A4A4A</color>
     <color name="proxy_connected">#2E7D32</color>
-    <color name="proxy_disconnected">#9E9E9E</color>
+    <color name="proxy_disconnected">#BDBDBD</color>
     <color name="proxy_error">#C62828</color>
-    <color name="divider">#EEEEEE</color>
-    <color name="night_bg">#1E1E1E</color>
+    <color name="divider">#ECECEC</color>
+    <color name="night_bg">#121212</color>
+    <color name="search_bg">#F1F3F4</color>
     <color name="ic_launcher_background">#1B5E20</color>
 </resources>

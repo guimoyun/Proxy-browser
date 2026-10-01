@@ -5,7 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@color/surface"
-    android:padding="16dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="10dp">
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/menuPager"
@@ -19,36 +22,36 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingTop="8dp" />
+        android:paddingTop="6dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:paddingTop="4dp">
+        android:gravity="center_vertical"
+        android:paddingTop="2dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/menuPower"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:text="@string/quit"
-            android:textColor="@color/accent"
-            android:textSize="13sp" />
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_power"
+            android:background="@drawable/bg_icon_button"
+            android:contentDescription="@string/quit" />
 
-        <TextView
+        <View
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <TextView
+        <ImageView
             android:id="@+id/menuCollapse"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="6dp"
-            android:text="⌄"
-            android:textColor="@color/text_secondary"
-            android:textSize="18sp" />
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_keyboard_arrow_down"
+            android:background="@drawable/bg_icon_button"
+            android:contentDescription="@string/quit" />
     </LinearLayout>
 </LinearLayout>

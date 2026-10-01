@@ -76,7 +76,7 @@ object MenuSheetController {
     ) {
         val pager = sheet.findViewById<ViewPager2>(R.id.menuPager)
         val dots = sheet.findViewById<LinearLayout>(R.id.menuDots)
-        pager.adapter = MenuPagerAdapter(frag, onProxyToggle, onOpenNodes)
+        pager.adapter = MenuPagerAdapter(frag, onProxyToggle, onOpenNodes, onClose)
 
         fun renderDots(pos: Int) {
             dots.removeAllViews()
@@ -102,7 +102,8 @@ object MenuSheetController {
     private class MenuPagerAdapter(
         private val frag: BrowserFragment,
         private val onProxyToggle: () -> Unit,
-        private val onOpenNodes: () -> Unit
+        private val onOpenNodes: () -> Unit,
+        private val onDismiss: () -> Unit
     ) : RecyclerView.Adapter<MenuPagerAdapter.VH>() {
 
         class VH(v: View) : RecyclerView.ViewHolder(v) {
@@ -139,6 +140,16 @@ object MenuSheetController {
 
         private fun route(a: Action) {
             when (a) {
+                Action.BOOKMARK, Action.HISTORY, Action.SETTINGS, Action.IDENTITY, Action.NETLOG,
+                Action.FIND, Action.FULLSCREEN, Action.TOOLBOX, Action.FONTSIZE, Action.INCOGNITO,
+                Action.TRANSLATE, Action.SOURCE, Action.SAVE, Action.OFFLINE, Action.IMAGE_MODE,
+                Action.DESKTOP, Action.SHARE, Action.ADD_BOOKMARK, Action.TTS, Action.ADBLOCK,
+                Action.ORIENTATION, Action.MARK_AD, Action.REPORT, Action.HOME_SHORTCUT,
+                Action.QR, Action.AI, Action.SNIFF, Action.DOWNLOAD, Action.NIGHT ->
+                    onDismiss()
+                else -> Unit
+            }
+            when (a) {
                 Action.BOOKMARK -> frag.openBookmarks()
                 Action.HISTORY -> frag.openHistory()
                 Action.SETTINGS -> frag.openSettings()
@@ -162,7 +173,7 @@ object MenuSheetController {
                 Action.ADBLOCK -> frag.toggleAdBlock()
                 Action.ORIENTATION -> frag.toggleOrientation()
                 Action.NIGHT -> {
-                    // 夜间模式：切换应用主题需重建，此处简化提示
+                    // 夜间模式：主题 DayNight，随系统切换；此处提示
                     Toast.makeText(frag.requireContext(), "夜间模式：请在系统设置切换深色主题", Toast.LENGTH_SHORT).show()
                 }
                 else -> Toast.makeText(frag.requireContext(), "该功能即将支持", Toast.LENGTH_SHORT).show()

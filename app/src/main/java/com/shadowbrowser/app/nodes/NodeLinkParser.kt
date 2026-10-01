@@ -154,9 +154,10 @@ object NodeLinkParser {
     }
 
     // ---------------- 工具 ----------------
-    private fun fragment(s: String): String =
-        if (s.contains("#")) URLDecoder.decode(s.substringAfterLast("#"), StandardCharsets.UTF_8.name())
-        else ""
+    private fun fragment(s: String): String {
+        val idx = s.lastIndexOf('#')
+        return if (idx >= 0) URLDecoder.decode(s.substring(idx + 1), StandardCharsets.UTF_8.name()) else ""
+    }
 
     private fun query(s: String): Map<String, String> {
         val q = s.substringAfter('?').substringBefore('#')

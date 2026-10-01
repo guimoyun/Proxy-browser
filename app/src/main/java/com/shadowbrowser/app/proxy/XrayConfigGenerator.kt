@@ -49,17 +49,18 @@ object XrayConfigGenerator {
 
     private fun buildSettings(node: Node): JSONObject {
         return when (node.protocol) {
-            "vless" -> JSONObject().put("vnext", JSONArray().put(
-                JSONObject()
-                    .put("address", node.address)
-                    .put("port", node.port)
-                    .put("users", JSONArray().put(
-                        JSONObject()
-                            .put("id", node.uuid)
-                            .put("encryption", node.encryption.ifBlank { "none" })
-                            .put("flow", node.flow)
-                    ))
-            ))
+            "vless" -> {
+                val user = JSONObject()
+                    .put("id", node.uuid)
+                    .put("encryption", node.encryption.ifBlank { "none" })
+                if (node.flow.isNotBlank()) user.put("flow", node.flow)
+                JSONObject().put("vnext", JSONArray().put(
+                    JSONObject()
+                        .put("address", node.address)
+                        .put("port", node.port)
+                        .put("users", JSONArray().put(user))
+                ))
+            }
             "vmess" -> JSONObject().put("vnext", JSONArray().put(
                 JSONObject()
                     .put("address", node.address)
@@ -96,14 +97,14 @@ object XrayConfigGenerator {
             "tls" -> stream
                 .put("security", "tls")
                 .put("tlsSettings", JSONObject()
-                    .put("serverName", node.sni)
+                    .put("serverName", node.sni.ifBlank { node.address })
                     .put("allowInsecure", false)
                     .put("fingerprint", node.fingerprint.ifBlank { "chrome" })
                     .put("alpn", if (node.alpn.isBlank()) JSONArray() else JSONArray().put(node.alpn)))
             "reality" -> stream
                 .put("security", "reality")
                 .put("realitySettings", JSONObject()
-                    .put("serverName", node.sni)
+                    .put("serverName", node.sni.ifBlank { node.address })
                     .put("fingerprint", node.fingerprint.ifBlank { "chrome" })
                     .put("publicKey", node.publicKey)
                     .put("shortId", node.shortId)
@@ -114,12 +115,18 @@ object XrayConfigGenerator {
         when (node.network) {
             "ws" -> stream.put("wsSettings", JSONObject()
                 .put("path", node.path)
-                .put("headers", JSONObject().put("Host", node.host)))
-            "grpc" -> stream.put("grpcSettings", JSONObject()
-                .put("serviceName", node.serviceName))
-            "h2" -> stream.put("httpSettings", JSONObject()
-                .put("host", node.host)
-                .put("path", node.path))
+                .put("headers", if (node.host.isBlank()) JSONObject() else JSONObject().put("Host", node.host)))
+            "grpc" -> {
+                val g = JSONObject()
+                if (node.serviceName.isNotBlank()) g.put("serviceName", node.serviceName)
+                stream.put("grpcSettings", g)
+            }
+            "h2" -> {
+                val h = JSONObject()
+                if (node.host.isNotBlank()) h.put("host", node.host)
+                if (node.path.isNotBlank()) h.put("path", node.path)
+                stream.put("httpSettings", h)
+            }
         }
         return stream
     }

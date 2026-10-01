@@ -29,6 +29,6 @@
         android:background="@drawable/bg_btn_primary"
         android:padding="10dp"
         android:text="@string/new_tab"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_primary"
         android:textSize="15sp" />
 </LinearLayout>

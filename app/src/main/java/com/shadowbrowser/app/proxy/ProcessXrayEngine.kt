@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicReference
  * 赋予可执行权限后用 ProcessBuilder 以子进程方式运行，配置写在 filesDir/xray/config.json。
  * 该方式不依赖 VPNService、不需要 root，绑定 127.0.0.1 本地端口即可。
  *
- * 注意：构建前需把 xray 二进制放入 app/src/main/assets/xray/xray（见 README）。
- * 缺失时 start() 返回 false 并记录明确错误。
+ * 就绪判定：轮询本地 HTTP 端口，端口真正打开才返回成功，避免“假连接”。
+ * 日志：xray stderr 全部写入 ProxyLogStore（网络日志页可见），失败原因可排查。
  */
 class ProcessXrayEngine(
     private val context: Context,
@@ -36,6 +36,7 @@ class ProcessXrayEngine(
     override fun start(configJson: String): Boolean {
         stop()
         if (!prepareBinary()) {
+            ProxyLogStore.add("[xray] 未找到/无法准备 xray 二进制，请确认 APK 内含 assets/xray/xray")
             current.set(ProxyStatus.ERROR)
             return false
         }
@@ -48,31 +49,42 @@ class ProcessXrayEngine(
                 .start()
             process = p
 
-            Thread.sleep(700)
-            if (!p.isAlive) {
-                current.set(ProxyStatus.ERROR)
-                return false
-            }
-            if (!portOpen("127.0.0.1", localHttpPort)) {
-                Log.w("ProcessXrayEngine", "本地端口 $localHttpPort 未就绪，但进程存活")
-            }
-            // 后台兜底读取日志，进程退出时更新状态
+            // 后台读取 xray 输出到日志（网络日志页可见）
             Thread {
                 try {
                     p.inputStream.bufferedReader().forEachLine { line ->
-                        if (line.isNotBlank()) Log.d("ProcessXrayEngine", line)
+                        if (line.isNotBlank()) ProxyLogStore.add("[xray] $line")
                     }
                 } catch (_: Exception) {
                 }
                 if (current.get() == ProxyStatus.CONNECTED || current.get() == ProxyStatus.CONNECTING) {
+                    ProxyLogStore.add("[xray] 进程已退出")
                     current.set(ProxyStatus.ERROR)
                 }
                 process = null
             }.start()
 
-            current.set(ProxyStatus.CONNECTED)
-            true
+            // 轮询本地 HTTP 端口，真正就绪才算成功
+            val deadline = System.currentTimeMillis() + 8000
+            while (System.currentTimeMillis() < deadline) {
+                if (!p.isAlive) {
+                    ProxyLogStore.add("[xray] 启动后进程退出（多为配置错误），见上方日志")
+                    current.set(ProxyStatus.ERROR)
+                    return false
+                }
+                if (portOpen("127.0.0.1", localHttpPort)) {
+                    ProxyLogStore.add("[xray] 本地代理就绪 127.0.0.1:$localHttpPort")
+                    current.set(ProxyStatus.CONNECTED)
+                    return true
+                }
+                Thread.sleep(200)
+            }
+            ProxyLogStore.add("[xray] 8 秒内本地端口未就绪，已停止")
+            p.destroy()
+            current.set(ProxyStatus.ERROR)
+            false
         } catch (e: Exception) {
+            ProxyLogStore.add("[xray] 启动异常: ${e.message ?: e.javaClass.simpleName}")
             Log.e("ProcessXrayEngine", "start failed", e)
             current.set(ProxyStatus.ERROR)
             false
@@ -103,6 +115,7 @@ class ProcessXrayEngine(
                 context.assets.open("xray/xray").use { input ->
                     FileOutputStream(binaryFile).use { out -> input.copyTo(out) }
                 }
+                ProxyLogStore.add("[xray] 已从 assets 释放 xray 二进制")
             }
             if (!binaryFile.setExecutable(true)) {
                 Log.w("ProcessXrayEngine", "无法设置可执行权限")

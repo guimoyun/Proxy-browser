@@ -73,9 +73,9 @@ class SettingsFragment : Fragment() {
     private fun section(title: String): View {
         val tv = TextView(requireContext()).apply {
             text = title
-            setTextColor(resources.getColor(R.color.accent, null))
-            textSize = 14f
-            setPadding(48, 24, 16, 8)
+            setTextColor(resources.getColor(R.color.text_secondary, null))
+            textSize = 13f
+            setPadding(48, 24, 16, 6)
         }
         return tv
     }
@@ -91,7 +91,7 @@ class SettingsFragment : Fragment() {
 
     private fun open(frag: Fragment) {
         requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, frag)
+            .add(R.id.fragmentContainer, frag)
             .addToBackStack(null)
             .commit()
     }

@@ -2,6 +2,7 @@ package com.shadowbrowser.app.browser
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -41,7 +42,12 @@ class TabManager(
         val idx = tabs.indexOf(tab)
         if (idx < 0) return null
         tabs.removeAt(idx)
-        tab.webView.destroy()
+        // 必须先从父容器移除再 destroy，否则 "WebView.destroy() while attached" 崩溃
+        (tab.webView.parent as? ViewGroup)?.removeView(tab.webView)
+        try {
+            tab.webView.destroy()
+        } catch (_: Exception) {
+        }
         if (current === tab) {
             current = if (tabs.isNotEmpty()) tabs[minOf(idx, tabs.size - 1)] else null
         }

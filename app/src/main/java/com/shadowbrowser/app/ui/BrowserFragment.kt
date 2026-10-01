@@ -10,7 +10,13 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -27,8 +33,6 @@ import com.shadowbrowser.app.databinding.FragmentBrowserBinding
 import com.shadowbrowser.app.proxy.ProxyManager
 import com.shadowbrowser.app.proxy.ProxyStatus
 import com.shadowbrowser.app.ui.adapter.TabListAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -91,6 +95,7 @@ class BrowserFragment : Fragment() {
                 override fun onTitle(title: String?, url: String?) = renderTitle()
 
                 override fun onProgress(progress: Int) {
+                    val b = _b ?: return
                     b.progressBar.progress = progress
                     b.progressBar.visibility = if (progress in 1..99) View.VISIBLE else View.GONE
                 }
@@ -105,8 +110,10 @@ class BrowserFragment : Fragment() {
         setupFindBar()
         setupHome()
 
-        GlobalScope.launch(Dispatchers.Main) {
-            proxy.status.collect { renderProxyStatus() }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                proxy.status.collect { renderProxyStatus() }
+            }
         }
         renderProxyStatus()
 
@@ -168,6 +175,7 @@ class BrowserFragment : Fragment() {
     }
 
     private fun renderProxyStatus() {
+        val b = _b ?: return
         val s = proxy.status.value
         b.proxyChip.setBackgroundResource(
             when (s) {
@@ -346,9 +354,14 @@ class BrowserFragment : Fragment() {
     fun openToolboxSafe() = showToolboxSheet()
     fun showFindBarSafe() = showFindBar()
 
+    private var fullscreen = false
+
     fun toggleFullscreenSafe() {
-        requireActivity().window.decorView.systemUiVisibility =
-            if (b.webContainer.visibility == View.VISIBLE) 5894 else 0
+        fullscreen = !fullscreen
+        val act = requireActivity()
+        val controller = WindowCompat.getInsetsController(act.window, act.window.decorView)
+        if (fullscreen) controller.hide(WindowInsetsCompat.Type.systemBars())
+        else controller.show(WindowInsetsCompat.Type.systemBars())
     }
 
     fun readAloudSafe() {
@@ -392,8 +405,9 @@ class BrowserFragment : Fragment() {
     fun openNetLog() = openScreen(NetworkLogFragment())
 
     private fun openScreen(frag: Fragment) {
+        // 用 add 压栈而非 replace：浏览器界面保持存活，书签/历史回跳正常、WebView 不重建
         requireActivity().supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, frag)
+            .add(R.id.fragmentContainer, frag)
             .addToBackStack(null)
             .commit()
     }

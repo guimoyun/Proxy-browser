@@ -21,7 +21,7 @@
             android:background="@drawable/bg_btn_outline"
             android:padding="10dp"
             android:text="@string/m_find"
-            android:textColor="@color/accent" />
+            android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/tool_fullscreen"
@@ -33,7 +33,7 @@
             android:background="@drawable/bg_btn_outline"
             android:padding="10dp"
             android:text="@string/m_fullscreen"
-            android:textColor="@color/accent" />
+            android:textColor="@color/text_primary" />
     </LinearLayout>
 
     <LinearLayout
@@ -52,7 +52,7 @@
             android:background="@drawable/bg_btn_outline"
             android:padding="10dp"
             android:text="A-"
-            android:textColor="@color/accent" />
+            android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/tool_font_inc"
@@ -64,7 +64,7 @@
             android:background="@drawable/bg_btn_outline"
             android:padding="10dp"
             android:text="A+"
-            android:textColor="@color/accent" />
+            android:textColor="@color/text_primary" />
     </LinearLayout>
 
     <TextView
@@ -76,5 +76,5 @@
         android:background="@drawable/bg_btn_outline"
         android:padding="10dp"
         android:text="@string/m_share"
-        android:textColor="@color/accent" />
+        android:textColor="@color/text_primary" />
 </LinearLayout>

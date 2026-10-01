@@ -79,13 +79,51 @@ mkdir -p app/src/main/assets/xray
 
 ---
 
+## 更新记录
+
+### v1.0.1（本轮修复，2026-10-01）
+
+**1. 连接失败修复（核心）**
+- 旧版引擎启动后只 `sleep 700ms` 就宣称「已连接」，本地端口实际未就绪 → 出现"假连接"。现在改为**轮询本地 HTTP 端口 8 秒，端口真正打开才算连接成功**。
+- Xray 子进程的 stderr 输出全部写入「网络日志」页，连接失败时可在此页看到具体原因（配置错误 / 端口被占 / 二进制异常等）。
+- 引擎退出时自动检测并清理代理覆盖，界面状态同步为「连接失败」，不再停留「已连接」假象。
+- 连接失败时顶部状态条显示红色，并可在「代理节点」页看到具体错误提示（含 WebView 版本检测）。
+
+**2. 闪退修复**
+- 关闭标签页：先 `detach` 再 `destroy`，修复 `WebView.destroy() while attached` 崩溃。
+- 所有协程增加统一异常兜底（`CoroutineExceptionHandler` + try/catch），任何一步异常都落入 ERROR 状态而不是崩溃。
+- 重复设置代理覆盖（`setProxyOverride` 抛 `IllegalStateException`）：先清除旧覆盖再设置。
+- 页面状态监听改为跟随 Fragment 生命周期（`repeatOnLifecycle`），离开页面后不再触发空视图崩溃。
+- 功能页导航改为 `add()` 压栈（不销毁浏览器界面），书签/历史回跳正常、WebView 不重建。
+
+**3. UI 全面重做（参考 Via）**
+- 极简白色主题：白底工具栏 + 深色线性图标 + 黑色标题。
+- 主页：蓝 / 橙 / 黄三色折纸 **M** Logo、长椭圆搜索框（灰色圆角胶囊）、代理入口卡片。
+- 底部五键导航：扁平黑白图标。
+- 菜单：圆角白色底部弹窗，每页 2 行 × 5 列，线性黑白图标 + 中文标签，底部电源 / 收起箭头，灰色半透明遮罩。
+- 设置页：纯白背景、分组纯文字列表。
+- 节点 / 书签 / 历史 / 日志等列表统一为白底 + 细分隔线 + 深色文字。
+
+---
+
 ## 安装与使用
 
 1. 安装 `app-debug.apk`（允许「未知来源」）。
 2. 打开应用 → 点击主页「代理节点」卡片（或菜单 → 代理节点 / 设置 → 代理节点管理）。
-3. **添加节点**：点右上角 `+`，粘贴 `vless://` 等分享链接自动填充；或填订阅 URL → 导入。
+3. **添加节点**：点右上角 `+`，粘贴 `vless://` `vmess://` 等分享链接自动填充；或填订阅 URL → 导入。
 4. 在列表点「连接」按钮（或长按节点 → 连接）。连接成功后顶部状态条变绿并显示节点名。
 5. 正常上网即可；不连接时浏览器直连。
+
+> 测试节点示例（`vmess://` 链接可直接粘贴到「添加节点」页）：
+> `vmess://eyJhZGQiOiIzOC4yNDQuNTAuMTQyIiwiYWlkIjoiMCIsImFscG4iOiIiLCJmcCI6IiIsImhvc3QiOiIiLCJpZCI6ImU5OWVmYzBmLTcwYmMtNGVhYi1iNWNjLWFkNGQyOWM3ODc3MiIsIm5ldCI6InRjcCIsInBhdGgiOiIiLCJwb3J0IjoiMjIxMjkiLCJwcyI6ImRmdWcxZHI3Iiwic2N5IjoiYXV0byIsInNuaSI6IiIsInRscyI6Im5vbmUiLCJ0eXBlIjoibm9uZSIsInYiOiIyIn0=`
+
+### 连接失败排查
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| 顶部状态条红色「连接失败」 | WebView 版本过低，不支持应用内代理 | 更新系统 WebView：设置 → 应用 → Android System WebView → 更新（需 ≥ 91） |
+| 红色并提示「Xray 启动失败」 | 节点配置错误 / 端口占用 / 二进制异常 | 打开「菜单 → 网络日志」查看 `[xray]` 日志 |
+| 日志显示 `connection refused` | 节点失效或地址错误 | 换节点；在节点页「测延迟」验证 |
 
 ---
 
