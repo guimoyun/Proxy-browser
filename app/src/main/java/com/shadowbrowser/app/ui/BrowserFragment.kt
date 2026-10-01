@@ -66,6 +66,16 @@ class BrowserFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        try {
+            initBrowser()
+        } catch (e: Exception) {
+            android.util.Log.e("BrowserFragment", "初始化异常", e)
+            com.shadowbrowser.app.proxy.ProxyLogStore.add("[ui] 初始化异常: ${e.message ?: e.javaClass.simpleName}")
+            Toast.makeText(requireContext(), "界面初始化异常: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun initBrowser() {
         val ctx = requireContext()
         fingerprint = FingerprintEngine(ctx)
         proxy = ProxyManager.init(ctx)

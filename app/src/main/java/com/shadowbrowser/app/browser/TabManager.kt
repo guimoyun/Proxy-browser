@@ -57,7 +57,13 @@ class TabManager(
     fun list(): List<TabInfo> = tabs.toList()
 
     fun closeAll() {
-        tabs.forEach { it.webView.destroy() }
+        tabs.forEach {
+            try {
+                (it.webView.parent as? ViewGroup)?.removeView(it.webView)
+                it.webView.destroy()
+            } catch (_: Exception) {
+            }
+        }
         tabs.clear()
         current = null
     }
