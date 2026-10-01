@@ -8,7 +8,7 @@ PROJ=/home/user/Doubao/chats/38445152083111682/ShadowBrowser
 cd "$PROJ"
 # 指向本机 SDK（不入库）
 echo "sdk.dir=$ANDROID_HOME" > local.properties
-GRADLE=~/shadow_build/gradle-8.7/bin/gradle
+GRADLE=~/shadow_build/gradle-8.11.1/bin/gradle
 echo "=== gradle version ==="
 "$GRADLE" --version | head -5
 echo "=== building assembleDebug ==="

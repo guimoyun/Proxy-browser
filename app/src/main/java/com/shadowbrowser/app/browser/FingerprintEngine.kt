@@ -2,14 +2,17 @@ package com.shadowbrowser.app.browser
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.webkit.WebView
+import org.mozilla.geckoview.GeckoSession
 
 /**
- * 指纹伪装（WebView 可改项）。
+ * 指纹伪装（GeckoView 可改项）。
  *
- * 诚实边界：标准 WebView 无法深度伪造 Canvas / WebGL / 字体指纹（需替换 Chromium 内核）。
- * 本实现覆盖：User-Agent（默认/随机/自定义/电脑模式）、JS 注入覆盖语言/时区/并发/内存/插件、
- * 禁用 WebRTC（防真实 IP 泄露）。
+ * 诚实边界：完整指纹伪造（Canvas/WebGL/字体精确伪装）需要修改引擎源码，
+ * 本工程不做。GeckoView 提供：
+ *  - UA 覆盖（默认/随机/自定义/电脑模式），逐标签生效；
+ *  - 隐私模式（不保留历史/cookie）；
+ *  - 「基线指纹保护」（Firefox FPP：字体/画布噪声/WebRTC IP 保护等，
+ *    通过配置文件写入 prefs，重启应用后生效）。
  */
 class FingerprintEngine(context: Context) {
 
@@ -18,15 +21,14 @@ class FingerprintEngine(context: Context) {
         appContext.getSharedPreferences("fingerprint", Context.MODE_PRIVATE)
 
     companion object {
-        private const val K_UA = "ua"
         private const val K_RANDOM_UA = "random_ua"
         private const val K_DESKTOP = "desktop"
-        private const val K_TZ = "tz_offset_minutes"
         private const val K_WEBRTC = "webrtc_off"
+        private const val K_FPP = "fpp"
         private const val K_CUSTOM_UA = "custom_ua"
 
-        val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        val DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:156.0) " +
+            "Gecko/20100101 Firefox/156.0"
     }
 
     fun effectiveUserAgent(): String {
@@ -34,8 +36,11 @@ class FingerprintEngine(context: Context) {
         if (prefs.getBoolean(K_DESKTOP, false)) return DESKTOP_UA
         val custom = prefs.getString(K_CUSTOM_UA, "").orEmpty()
         if (custom.isNotBlank()) return custom
-        return WebViewSettingsHolder.defaultUa(appContext)
+        return defaultGeckoUa()
     }
+
+    private fun defaultGeckoUa(): String =
+        "Mozilla/5.0 (Android 14; Mobile; rv:156.0) Gecko/156.0 Firefox/156.0"
 
     fun desktopMode(): Boolean = prefs.getBoolean(K_DESKTOP, false)
     fun setDesktopMode(on: Boolean) = prefs.edit().putBoolean(K_DESKTOP, on).apply()
@@ -46,57 +51,26 @@ class FingerprintEngine(context: Context) {
     fun customUa(): String = prefs.getString(K_CUSTOM_UA, "").orEmpty()
     fun setCustomUa(s: String) = prefs.edit().putString(K_CUSTOM_UA, s).apply()
 
-    fun tzOffsetMinutes(): Int = prefs.getInt(K_TZ, 0)
-    fun setTzOffsetMinutes(m: Int) = prefs.edit().putInt(K_TZ, m).apply()
+    /** 基线指纹保护（Firefox FPP，写入 gecko 配置 prefs，重启应用后生效） */
+    fun fppEnabled(): Boolean = prefs.getBoolean(K_FPP, true)
+    fun setFpp(on: Boolean) = prefs.edit().putBoolean(K_FPP, on).apply()
 
     fun webrtcDisabled(): Boolean = prefs.getBoolean(K_WEBRTC, false)
     fun setWebrtcDisabled(on: Boolean) = prefs.edit().putBoolean(K_WEBRTC, on).apply()
 
-    /** 应用到指定 WebView（设置 UA 等静态项） */
-    fun applyTo(wv: WebView) {
-        wv.settings.userAgentString = effectiveUserAgent()
-    }
-
-    /** 页面加载完成后注入的 JS（覆盖可观测属性），返回脚本字符串 */
-    fun jsInjection(): String {
-        val tz = tzOffsetMinutes()
-        val webrtcOff = webrtcDisabled()
-        val sb = StringBuilder("(function(){")
-        sb.append("try{Object.defineProperty(navigator,'userAgent',{get:function(){return '")
-        sb.append(effectiveUserAgent().replace("'", "\\'"))
-        sb.append("';}});}catch(e){}")
-        if (tz != 0) {
-            val sign = if (tz >= 0) "+" else "-"
-            val abs = kotlin.math.abs(tz)
-            sb.append("var __tzOffset=$sign$abs;try{Date.prototype.getTimezoneOffset=function(){return __tzOffset;};}catch(e){}")
-        }
-        if (webrtcOff) {
-            sb.append("try{window.RTCPeerConnection=function(){throw new Error('blocked');};")
-            sb.append("window.webkitRTCPeerConnection=function(){throw new Error('blocked');};}catch(e){}")
-        }
-        sb.append("})();")
-        return sb.toString()
+    /** 应用到 Gecko 会话（UA 立即生效；FPP/WebRTC 需重启应用） */
+    fun applyTo(session: GeckoSession) {
+        session.settings.setUserAgentOverride(effectiveUserAgent())
     }
 
     private fun randomAndroidUa(): String {
-        val chrome = listOf("120", "121", "122", "123", "124", "125", "126")
+        val ver = listOf("132", "136", "140", "144", "148", "152", "156").random()
         val device = listOf(
-            "Pixel 8; Build/UD1A.230803.041",
-            "SM-S918B; Build/TP1A.220624.014",
-            "M2012K11AG; Build/SKQ1.220303.001",
-            "2201123C; Build/SKQ1.220303.001"
-        )
-        return "Mozilla/5.0 (Linux; Android 14; ${device.random()}) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chrome.random()}.0.0.0 Mobile Safari/537.36"
-    }
-}
-
-/** 单例缓存系统默认 UA（首次获取后固定） */
-object WebViewSettingsHolder {
-    private var cached: String? = null
-    fun defaultUa(context: android.content.Context): String {
-        cached?.let { return it }
-        cached = android.webkit.WebSettings.getDefaultUserAgent(context.applicationContext)
-        return cached!!
+            "Pixel 8",
+            "SM-S918B",
+            "M2012K11AG",
+            "2201123C"
+        ).random()
+        return "Mozilla/5.0 (Android 14; Mobile; $device; rv:$ver.0) Gecko/$ver.0 Firefox/$ver.0"
     }
 }

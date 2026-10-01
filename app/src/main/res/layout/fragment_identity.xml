@@ -80,6 +80,20 @@
                 android:layout_height="wrap_content"
                 android:text="@string/disable_webrtc" />
 
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchFpp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/baseline_fpp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/fpp_note"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:paddingTop="4dp" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCustomUa"
                 style="@style/Widget.Material3.Button.OutlinedButton"
@@ -87,14 +101,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/custom_ua" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnTz"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/fake_timezone" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "com.shadowbrowser.app"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.shadowbrowser.app"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 3
-        versionName = "1.0.3"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "2.0.0"
     }
 
     buildTypes {
@@ -52,8 +52,8 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
-    // WebView 代理覆盖（ProxyController）所需，WebView 91+ 可用
-    implementation("androidx.webkit:webkit:1.11.0")
+    // GeckoView（Mozilla 内核，随 APK 打包，不依赖系统 WebView）
+    implementation("org.mozilla.geckoview:geckoview-arm64-v8a:153.0.20260810162159")
     // 协程
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     // 订阅抓取

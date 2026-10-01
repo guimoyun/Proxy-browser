@@ -100,6 +100,8 @@
     <string name="random_ua">随机 UA</string>
     <string name="fake_timezone">伪装时区偏移</string>
     <string name="disable_webrtc">禁用 WebRTC</string>
+    <string name="baseline_fpp">基线指纹保护（Firefox FPP）</string>
+    <string name="fpp_note">开启后启用 Firefox 基线指纹保护（字体/画布噪声/WebRTC IP 保护等）。FPP 与禁用 WebRTC 均需重启应用后生效。</string>
     <string name="clear_data">清除浏览数据</string>
     <string name="cleared">已清除</string>
     <string name="proxy_group">代理</string>

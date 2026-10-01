@@ -3,24 +3,23 @@ package com.shadowbrowser.app.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.shadowbrowser.app.R
-import com.shadowbrowser.app.browser.TabInfo
+import com.shadowbrowser.app.gecko.GeckoTabManager
 
 /**
  * 标签页列表（标签面板用）：标题 + URL + 关闭按钮，点击切换。
  */
 class TabListAdapter(
-    private val tabs: List<TabInfo>,
+    private val tabs: List<GeckoTabManager.Tab>,
     private val currentId: Long,
-    private val onOpen: (TabInfo) -> Unit,
-    private val onClose: (TabInfo) -> Unit
+    private val onOpen: (GeckoTabManager.Tab) -> Unit,
+    private val onClose: (GeckoTabManager.Tab) -> Unit
 ) : RecyclerView.Adapter<TabListAdapter.VH>() {
 
     class VH(v: View) : RecyclerView.ViewHolder(v) {
-        val title: TextView = v.findViewById(R.id.tabTitle)
-        val url: TextView = v.findViewById(R.id.tabUrl)
+        val title: android.widget.TextView = v.findViewById(R.id.tabTitle)
+        val url: android.widget.TextView = v.findViewById(R.id.tabUrl)
         val close: View = v.findViewById(R.id.tabClose)
     }
 

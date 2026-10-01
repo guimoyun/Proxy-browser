@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.shadowbrowser.app.R
@@ -12,8 +12,10 @@ import com.shadowbrowser.app.browser.FingerprintEngine
 import com.shadowbrowser.app.databinding.FragmentIdentityBinding
 
 /**
- * 指纹伪装页：UA（随机/电脑/自定义）、时区偏移、禁用 WebRTC。
- * 诚实说明：标准 WebView 仅能改这些可观测项，深度指纹需 Chromium 内核。
+ * 指纹伪装页（v2 / GeckoView）：
+ *  - UA：随机 / 电脑模式 / 自定义（立即生效于当前与新建标签）；
+ *  - 基线指纹保护（Firefox FPP）与禁用 WebRTC：写入引擎配置，重启应用后生效。
+ * 诚实说明：完整指纹伪造（Canvas/WebGL/字体精确伪装）需改内核源码，本应用不做。
  */
 class IdentityFragment : Fragment() {
 
@@ -48,7 +50,15 @@ class IdentityFragment : Fragment() {
             renderUa()
         }
         b.switchWebrtc.isChecked = fp.webrtcDisabled()
-        b.switchWebrtc.setOnCheckedChangeListener { _, on -> fp.setWebrtcDisabled(on) }
+        b.switchWebrtc.setOnCheckedChangeListener { _, on ->
+            fp.setWebrtcDisabled(on)
+            Toast.makeText(requireContext(), "重启应用后生效", Toast.LENGTH_SHORT).show()
+        }
+        b.switchFpp.isChecked = fp.fppEnabled()
+        b.switchFpp.setOnCheckedChangeListener { _, on ->
+            fp.setFpp(on)
+            Toast.makeText(requireContext(), "重启应用后生效", Toast.LENGTH_SHORT).show()
+        }
 
         b.btnCustomUa.setOnClickListener {
             val input = android.widget.EditText(requireContext()).apply {
@@ -61,22 +71,6 @@ class IdentityFragment : Fragment() {
                 .setPositiveButton("确定") { _, _ ->
                     fp.setCustomUa(input.text.toString().trim())
                     renderUa()
-                }
-                .show()
-        }
-        b.btnTz.setOnClickListener {
-            val input = android.widget.EditText(requireContext()).apply {
-                setHint("相对 UTC 的偏移分钟，如 480 表示 UTC+8")
-                setText(fp.tzOffsetMinutes().toString())
-                setSingleLine(true)
-            }
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(getString(R.string.fake_timezone))
-                .setView(input)
-                .setNegativeButton("取消", null)
-                .setPositiveButton("确定") { _, _ ->
-                    val m = input.text.toString().toIntOrNull()
-                    if (m != null) fp.setTzOffsetMinutes(m)
                 }
                 .show()
         }

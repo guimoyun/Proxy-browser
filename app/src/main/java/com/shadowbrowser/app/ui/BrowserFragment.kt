@@ -23,21 +23,21 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.shadowbrowser.app.R
 import com.shadowbrowser.app.browser.BookmarkStore
-import com.shadowbrowser.app.browser.BrowserClient
-import com.shadowbrowser.app.browser.ChromeClient
 import com.shadowbrowser.app.browser.FingerprintEngine
 import com.shadowbrowser.app.browser.HistoryStore
-import com.shadowbrowser.app.browser.TabInfo
-import com.shadowbrowser.app.browser.TabManager
 import com.shadowbrowser.app.databinding.FragmentBrowserBinding
+import com.shadowbrowser.app.gecko.GeckoClient
+import com.shadowbrowser.app.gecko.GeckoTabManager
+import com.shadowbrowser.app.proxy.ProxyLogStore
 import com.shadowbrowser.app.proxy.ProxyManager
 import com.shadowbrowser.app.proxy.ProxyStatus
 import com.shadowbrowser.app.ui.adapter.TabListAdapter
 import kotlinx.coroutines.launch
+import org.mozilla.geckoview.GeckoSession
 
 /**
- * 浏览器主界面，布局参考 Via 浏览器：
- * 顶部工具栏（搜索+标题+代理状态+收起）→ 内容区（主页/WebView）→ 底部五键导航。
+ * 浏览器主界面（v2 / GeckoView 内核），布局参考 Via 浏览器：
+ * 顶部工具栏（搜索+标题+代理状态+收起）→ 内容区（主页/GeckoView）→ 底部五键导航。
  * 菜单为底部弹出面板（3 页，每页 10 项，参考 Via 样式）。
  */
 @SuppressLint("SetJavaScriptEnabled")
@@ -50,7 +50,7 @@ class BrowserFragment : Fragment() {
     private lateinit var proxy: ProxyManager
     private lateinit var bookmarks: BookmarkStore
     private lateinit var history: HistoryStore
-    private lateinit var tabManager: TabManager
+    private lateinit var tabManager: GeckoTabManager
 
     private var incognito = false
 
@@ -70,7 +70,7 @@ class BrowserFragment : Fragment() {
             initBrowser()
         } catch (e: Exception) {
             android.util.Log.e("BrowserFragment", "初始化异常", e)
-            com.shadowbrowser.app.proxy.ProxyLogStore.add("[ui] 初始化异常: ${e.message ?: e.javaClass.simpleName}")
+            ProxyLogStore.add("[ui] 初始化异常: ${e.message ?: e.javaClass.simpleName}")
             Toast.makeText(requireContext(), "界面初始化异常: ${e.message ?: e.javaClass.simpleName}", Toast.LENGTH_LONG).show()
         }
     }
@@ -82,38 +82,45 @@ class BrowserFragment : Fragment() {
         bookmarks = BookmarkStore(ctx)
         history = HistoryStore(ctx)
 
-        tabManager = TabManager(
-            ctx, fingerprint,
-            BrowserClient(fingerprint, object : BrowserClient.Listener {
-                override fun onPageStarted(url: String?) = Unit
+        // 本地代理必须先于浏览器就绪（Gecko 固定走 127.0.0.1:10809）
+        proxy.ensureRunning()
 
-                override fun onPageFinished(url: String?, title: String?) {
-                    tabManager.current?.let { t ->
-                        t.url = url ?: ""
-                        t.title = title ?: "无标题"
-                        history.record(title ?: url ?: "", url ?: "")
-                        renderTabsBadge()
-                    }
+        val client = GeckoClient(requireActivity(), object : GeckoClient.Listener {
+            override fun onPageStart(url: String?) {
+                val t = tabManager.current ?: return
+                t.url = url ?: ""
+                renderTitle()
+            }
+
+            override fun onPageStop(url: String?) {
+                val t = tabManager.current ?: return
+                t.url = url ?: ""
+                if (t.title.isBlank()) t.title = "无标题"
+                history.record(t.title, t.url)
+                renderTabsBadge()
+                renderTitle()
+            }
+
+            override fun onPageTitle(title: String?, url: String?) {
+                tabManager.current?.let { t ->
+                    t.title = title ?: "无标题"
+                    t.url = url ?: t.url
                     renderTitle()
                 }
+            }
 
-                override fun onExternalUrl(url: String) {
-                    externalLauncher.launch(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                }
-            }),
-            ChromeClient(requireActivity(), object : ChromeClient.Listener {
-                override fun onTitle(title: String?, url: String?) = renderTitle()
+            override fun onProgress(progress: Int) {
+                val b = _b ?: return
+                b.progressBar.progress = progress
+                b.progressBar.visibility = if (progress in 1..99) View.VISIBLE else View.GONE
+            }
 
-                override fun onProgress(progress: Int) {
-                    val b = _b ?: return
-                    b.progressBar.progress = progress
-                    b.progressBar.visibility = if (progress in 1..99) View.VISIBLE else View.GONE
-                }
+            override fun onExternalUrl(url: String) {
+                externalLauncher.launch(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            }
+        })
 
-                override fun onShowFullscreen() = Unit
-                override fun onHideFullscreen() = Unit
-            })
-        )
+        tabManager = GeckoTabManager(ctx, fingerprint, client)
 
         setupToolbar()
         setupBottomNav()
@@ -216,16 +223,16 @@ class BrowserFragment : Fragment() {
         renderTitle()
     }
 
-    private fun attachWebView(tab: TabInfo) {
-        val wv = tab.webView
+    private fun attachWebView(tab: GeckoTabManager.Tab) {
+        val wv = tab.view
         (wv.parent as? ViewGroup)?.removeView(wv)
         b.webContainer.addView(wv, FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
         ))
     }
 
-    private fun detachWebView(tab: TabInfo?) {
-        tab?.webView?.let { (it.parent as? ViewGroup)?.removeView(it) }
+    private fun detachWebView(tab: GeckoTabManager.Tab?) {
+        tab?.view?.let { (it.parent as? ViewGroup)?.removeView(it) }
     }
 
     private fun showHome() {
@@ -243,18 +250,18 @@ class BrowserFragment : Fragment() {
     }
 
     private fun goHome() {
-        tabManager.current?.webView?.stopLoading()
+        tabManager.stop()
         showHome()
     }
 
     fun loadUrl(url: String) {
         val tab = tabManager.current ?: return
         if (tab.url.isBlank()) {
-            tab.webView.loadUrl(url)
+            tab.session.loadUri(url)
             attachWebView(tab)
         } else {
             newTab(incognito)
-            tabManager.current?.webView?.loadUrl(url)
+            tabManager.current?.session?.loadUri(url)
         }
         showWeb()
     }
@@ -265,8 +272,8 @@ class BrowserFragment : Fragment() {
 
     // ---------------- 底部导航 ----------------
     private fun setupBottomNav() {
-        b.navBack.setOnClickListener { tabManager.current?.webView?.goBack() }
-        b.navForward.setOnClickListener { tabManager.current?.webView?.goForward() }
+        b.navBack.setOnClickListener { tabManager.goBack() }
+        b.navForward.setOnClickListener { tabManager.goForward() }
         b.navHome.setOnClickListener { goHome() }
         b.navTabs.setOnClickListener { showTabSheet() }
         b.navMenu.setOnClickListener { showMenuSheet() }
@@ -292,7 +299,7 @@ class BrowserFragment : Fragment() {
                 detachWebView(old)
                 attachWebView(tab)
                 dialog.dismiss()
-                if (tab.url.isBlank()) showHome() else { showWeb(); tab.webView.reload() }
+                if (tab.url.isBlank()) showHome() else { showWeb(); tab.session.reload() }
                 renderTabsBadge(); renderTitle()
             },
             onClose = { tab ->
@@ -312,7 +319,7 @@ class BrowserFragment : Fragment() {
         dialog.show()
     }
 
-    // ---------------- 查找栏 ----------------
+    // ---------------- 查找栏（GeckoView 暂未集成 find API） ----------------
     private fun setupFindBar() {
         b.btnFindPrev.setOnClickListener { findPrev() }
         b.btnFindNext.setOnClickListener { findNext() }
@@ -321,24 +328,19 @@ class BrowserFragment : Fragment() {
     }
 
     private fun showFindBar() {
-        b.findBar.visibility = View.VISIBLE
-        b.findInput.requestFocus()
+        Toast.makeText(requireContext(), "页内查找：Gecko 内核版暂未集成，下个版本开放", Toast.LENGTH_LONG).show()
     }
 
     private fun hideFindBar() {
         b.findBar.visibility = View.GONE
-        tabManager.current?.webView?.clearMatches()
     }
 
     private fun findNext() {
-        val q = b.findInput.text?.toString() ?: return
-        if (q.isBlank()) return
-        tabManager.current?.webView?.findAllAsync(q)
-        tabManager.current?.webView?.findNext(true)
+        Toast.makeText(requireContext(), "页内查找暂未开放", Toast.LENGTH_SHORT).show()
     }
 
     private fun findPrev() {
-        tabManager.current?.webView?.findNext(false)
+        Toast.makeText(requireContext(), "页内查找暂未开放", Toast.LENGTH_SHORT).show()
     }
 
     // ---------------- 菜单面板 ----------------
@@ -375,21 +377,11 @@ class BrowserFragment : Fragment() {
     }
 
     fun readAloudSafe() {
-        val t = tabManager.current ?: return
-        if (t.url.isBlank()) return
-        t.webView.evaluateJavascript(
-            "(function(){try{var t=document.body.innerText;window.shadowReadAloud&&window.shadowReadAloud(t);}catch(e){}})()", null)
-        Toast.makeText(requireContext(), "已朗读（需页面开启脚本）", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "朗读网页：需要注入脚本，Gecko 内核版暂未集成", Toast.LENGTH_LONG).show()
     }
 
     fun showFontDialogSafe() {
-        val wv = tabManager.current?.webView ?: return
-        val opts = arrayOf("最小", "较小", "标准", "较大", "最大")
-        val values = arrayOf(80, 90, 100, 120, 140)
-        android.app.AlertDialog.Builder(requireContext())
-            .setTitle("字体大小")
-            .setItems(opts) { _, which -> wv.settings.textZoom = values[which] }
-            .show()
+        Toast.makeText(requireContext(), "字体大小：Gecko 内核版暂未集成", Toast.LENGTH_LONG).show()
     }
 
     private fun showToolboxSheet() {
@@ -415,7 +407,7 @@ class BrowserFragment : Fragment() {
     fun openNetLog() = openScreen(NetworkLogFragment())
 
     private fun openScreen(frag: Fragment) {
-        // 用 add 压栈而非 replace：浏览器界面保持存活，书签/历史回跳正常、WebView 不重建
+        // 用 add 压栈而非 replace：浏览器界面保持存活，书签/历史回跳正常、内核不重建
         requireActivity().supportFragmentManager.beginTransaction()
             .add(R.id.fragmentContainer, frag)
             .addToBackStack(null)
@@ -424,10 +416,10 @@ class BrowserFragment : Fragment() {
 
     fun toggleDesktopMode() {
         fingerprint.setDesktopMode(!fingerprint.desktopMode())
-        tabManager.current?.webView?.settings?.userAgentString = fingerprint.effectiveUserAgent()
+        tabManager.current?.let { fingerprint.applyTo(it.session) }
         Toast.makeText(requireContext(),
-            if (fingerprint.desktopMode()) "已切换电脑模式" else "已切回手机模式",
-            Toast.LENGTH_SHORT).show()
+            if (fingerprint.desktopMode()) "已切换电脑模式（当前与新建标签生效）" else "已切回手机模式（当前与新建标签生效）",
+            Toast.LENGTH_LONG).show()
     }
 
     fun toggleIncognito() {
@@ -442,13 +434,11 @@ class BrowserFragment : Fragment() {
     }
 
     fun toggleAdBlock() {
-        Toast.makeText(requireContext(), "广告拦截：WebView 支持有限，已启用 JS 基础过滤", Toast.LENGTH_LONG).show()
+        Toast.makeText(requireContext(), "广告拦截：Gecko 版暂未内置规则，后续版本开放", Toast.LENGTH_LONG).show()
     }
 
     fun toggleImageMode() {
-        val cur = tabManager.current?.webView?.settings?.loadsImagesAutomatically
-        tabManager.current?.webView?.settings?.loadsImagesAutomatically = cur != true
-        Toast.makeText(requireContext(), if (cur == true) "无图模式" else "有图模式", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "有图/无图模式：Gecko 版暂未集成", Toast.LENGTH_SHORT).show()
     }
 
     fun openViewSource() {
@@ -458,11 +448,7 @@ class BrowserFragment : Fragment() {
     }
 
     fun savePage() {
-        val t = tabManager.current ?: return
-        if (t.url.isBlank()) return
-        t.webView.evaluateJavascript(
-            "(function(){var h='<html>'+document.documentElement.innerHTML+'</html>';var a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(h);a.download='page.html';a.click();})()", null)
-        Toast.makeText(requireContext(), "已生成离线页面", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "保存/离线页面：Gecko 版暂未集成", Toast.LENGTH_LONG).show()
     }
 
     fun translatePage() {
@@ -471,8 +457,7 @@ class BrowserFragment : Fragment() {
     }
 
     fun changeFont(delta: Int) {
-        val wv = tabManager.current?.webView ?: return
-        wv.settings.textZoom = (wv.settings.textZoom + delta).coerceIn(50, 250)
+        Toast.makeText(requireContext(), "字体大小：Gecko 版暂未集成", Toast.LENGTH_SHORT).show()
     }
 
     fun shareCurrent() {
@@ -490,16 +475,6 @@ class BrowserFragment : Fragment() {
             act.requestedOrientation == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         ) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-    }
-
-    override fun onResume() {
-        super.onResume()
-        tabManager.current?.webView?.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        tabManager.current?.webView?.onPause()
     }
 
     override fun onDestroyView() {

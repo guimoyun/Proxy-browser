@@ -38,6 +38,35 @@ object XrayConfigGenerator {
         return root.toString()
     }
 
+    /**
+     * 直连模式配置：本地入站照常，出站走 freedom（不经过任何节点）。
+     * 浏览器始终指向本地代理端口；未连接节点时用该配置兜底直连。
+     */
+    fun generateDirect(httpPort: Int, socksPort: Int): String {
+        val root = JSONObject()
+        root.put("log", JSONObject().put("loglevel", "warning"))
+        val inbounds = JSONArray()
+        inbounds.put(
+            JSONObject()
+                .put("port", httpPort)
+                .put("listen", "127.0.0.1")
+                .put("protocol", "http")
+                .put("settings", JSONObject())
+        )
+        inbounds.put(
+            JSONObject()
+                .put("port", socksPort)
+                .put("listen", "127.0.0.1")
+                .put("protocol", "socks")
+                .put("settings", JSONObject().put("udp", true))
+        )
+        root.put("inbounds", inbounds)
+        root.put("outbounds", JSONArray().put(
+            JSONObject().put("protocol", "freedom").put("tag", "direct")
+        ))
+        return root.toString()
+    }
+
     private fun buildOutbound(node: Node): JSONObject {
         val out = JSONObject()
         out.put("protocol", node.protocol)
